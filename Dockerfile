@@ -32,7 +32,7 @@ RUN pip install --no-cache-dir \
     sentencepiece
 
 # flash-attn optional (~20% speedup) — daca compilarea esueaza, sarim
-RUN pip install --no-cache-dir flash-attn --no-build-isolation || \
+RUN pip install --no-cache-dir flash-attn --no-build-isolation || \\
     echo "[INFO] flash-attn skip — Florence ruleaza si fara"
 
 # ─── ProPainter (video inpainting) ───────────────────────────────────────────
