@@ -3,8 +3,9 @@ requests
 opencv-python-headless
 numpy
 Pillow
-transformers>=4.41.0
+transformers
 timm
 einops
+sentencepiece
 huggingface_hub
 accelerate

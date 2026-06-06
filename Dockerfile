@@ -21,14 +21,19 @@ RUN pip install --no-cache-dir \
     torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 \
     --index-url https://download.pytorch.org/whl/cu128
 
-# ─── Florence-2 (detectie text/logo) ─────────────────────────────────────────
+# ─── Transformers (latest) + deps Florence-2 ─────────────────────────────────
+# Folosim florence-community/Florence-2-large = checkpoint oficial convertit
+# cu integrare nativa in transformers (fara trust_remote_code).
+# Compatibil cu transformers 5.x.
 RUN pip install --no-cache-dir \
-    transformers>=4.41.0 \
+    transformers \
     timm \
     einops \
-    flash-attn --no-build-isolation || \
-    pip install --no-cache-dir transformers>=4.41.0 timm einops
-# flash-attn e optional — daca compilarea esueaza, Florence ruleaza si fara
+    sentencepiece
+
+# flash-attn optional (~20% speedup) — daca compilarea esueaza, sarim
+RUN pip install --no-cache-dir flash-attn --no-build-isolation || \
+    echo "[INFO] flash-attn skip — Florence ruleaza si fara"
 
 # ─── ProPainter (video inpainting) ───────────────────────────────────────────
 RUN git clone --depth=1 https://github.com/sczhou/ProPainter.git /app/ProPainter && \
@@ -44,14 +49,16 @@ RUN pip install --no-cache-dir \
     huggingface_hub \
     accelerate
 
-# ─── Pre-download weights Florence-2 (evitam cold-start download) ────────────
+# ─── Pre-download weights Florence-2 (florence-community — nativ transformers) 
+# Nu mai are nevoie de trust_remote_code → compatibil cu orice versiune transformers
 RUN python -c "\
-from transformers import AutoProcessor, AutoModelForCausalLM; \
+from transformers import AutoProcessor, Florence2ForConditionalGeneration; \
 import torch; \
-print('Downloading Florence-2-large...'); \
-AutoProcessor.from_pretrained('microsoft/Florence-2-large', trust_remote_code=True); \
-AutoModelForCausalLM.from_pretrained('microsoft/Florence-2-large', \
-    torch_dtype=torch.float16, trust_remote_code=True); \
+print('Downloading florence-community/Florence-2-large...'); \
+AutoProcessor.from_pretrained('florence-community/Florence-2-large'); \
+Florence2ForConditionalGeneration.from_pretrained( \
+    'florence-community/Florence-2-large', \
+    torch_dtype=torch.float32); \
 print('Florence-2 weights OK')"
 
 # ─── Pre-download weights ProPainter ─────────────────────────────────────────
